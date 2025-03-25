@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Matches</title>
+  <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background-color: #3c3c3c;
+      color: #fff;
+      display: flex;
+      height: 100vh;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background-color: #2b2b2b;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .sidebar a {
+      text-decoration: none;
+      color: #fff;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .sidebar a:hover {
+      background-color: #444;
+      transform: translateX(5px);
+    }
+    .sidebar a.active {
+      background-color: #FF4500;
+    }
+    /* Main Content */
+    .main-content {
+      flex-grow: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2em;
+    }
+    /* Matches List */
+    .matches-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .match-card {
+      background-color: #444;
+      border-radius: 10px;
+      padding: 15px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .match-card:hover {
+      background-color: #555;
+    }
+    .match-summary {
+      display: flex;
+      flex-direction: column;
+    }
+    .match-title {
+      font-size: 1.4em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .match-winner {
+      font-size: 1.1em;
+      margin-bottom: 5px;
+    }
+    .match-timestamp {
+      font-size: 0.8em;
+      position: absolute;
+      bottom: 5px;
+      right: 10px;
+      opacity: 0.8;
+    }
+    /* Hidden expanded details */
+    .match-details {
+      margin-top: 10px;
+      font-size: 0.95em;
+      display: none;
+      border-top: 1px solid #666;
+      padding-top: 10px;
+    }
+    .match-details p {
+      margin-bottom: 5px;
+    }
+    .video-link {
+      color: #FF4500;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar">
+    <h2>SFC Dashboard</h2>
+    <a href="dashboard_link.html" id="overview-link">Overview</a>
+    <a href="Leaderboard.html" id="leaderboard-link">Leaderboard</a>
+    <a href="matches.html" class="active" id="matches-link">Matches</a>
+    <a href="hof.html" id="hof-link">Hall Of Fame</a>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1>Matches</h1>
+    <div class="matches-container" id="matches-container">
+      <p style="font-size:1.5em;">Loading matches...</p>
+    </div>
+  </div>
+  
+  <!-- Firebase SDKs and Script -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+    import {
+      getFirestore,
+      doc,
+      collection,
+      query,
+      orderBy,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+    
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB55KgdLJWoFB1h-hfyEVfJYWT3aXIOKWM",
+      authDomain: "elosystem-54a9e.firebaseapp.com",
+      databaseURL: "https://elosystem-54a9e-default-rtdb.firebaseio.com",
+      projectId: "elosystem-54a9e",
+      storageBucket: "elosystem-54a9e.firebasestorage.app",
+      messagingSenderId: "737317674307",
+      appId: "1:737317674307:web:51d623e31dc01c849f63f6",
+      measurementId: "G-5EY1YC7G6W"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+    
+    // Function to format timestamp adjusted to user's local timezone
+    function formatTimestamp(timestamp) {
+      // Convert Firestore Timestamp to JS Date
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      // Use toLocaleString to display in user's local timezone with a short time zone name
+      return date.toLocaleString('en-US', { timeZoneName: 'short' });
+    }
+    
+    // Function to create a match card
+    function createMatchCard(matchData) {
+      const card = document.createElement("div");
+      card.className = "match-card";
+      
+      // Create the summary section
+      const summary = document.createElement("div");
+      summary.className = "match-summary";
+      
+      // Title: "Dueler(s) VS Dueler(s)"
+      const title = document.createElement("div");
+      title.className = "match-title";
+      // Assuming matchData contains team1 and team2 arrays or strings:
+      const team1 = Array.isArray(matchData.team1) ? matchData.team1.join(", ") : matchData.team1 || "Team 1";
+      const team2 = Array.isArray(matchData.team2) ? matchData.team2.join(", ") : matchData.team2 || "Team 2";
+      title.textContent = `${team1} vs ${team2}`;
+      summary.appendChild(title);
+      
+      // Winner info
+      const winner = document.createElement("div");
+      winner.className = "match-winner";
+      let winnerText = "Winner: Unknown";
+      if (matchData.winning_team === "Team 1") {
+        winnerText = `Winner: ${team1}`;
+      } else if (matchData.winning_team === "Team 2") {
+        winnerText = `Winner: ${team2}`;
+      }
+      winner.textContent = winnerText;
+      summary.appendChild(winner);
+      
+      // Append summary to card
+      card.appendChild(summary);
+      
+      // Timestamp (small) at bottom right of card
+      const timestamp = document.createElement("div");
+      timestamp.className = "match-timestamp";
+      timestamp.textContent = matchData.timestamp ? formatTimestamp(matchData.timestamp) : "Unknown time";
+      card.appendChild(timestamp);
+      
+      // Create the hidden details section
+      const details = document.createElement("div");
+      details.className = "match-details";
+      
+      // Detailed info: duelers, winner, points changes, full timestamp, video link (if provided)
+      const detailsContent = [];
+      detailsContent.push(`<p><strong>Teams:</strong> ${team1} vs ${team2}</p>`);
+      detailsContent.push(`<p><strong>Winner:</strong> ${winnerText.replace("Winner: ", "")}</p>`);
+      if (matchData.point_changes) {
+        // Assuming point_changes is an object with player names and change values
+        const changes = Object.entries(matchData.point_changes)
+          .map(([player, change]) => `<span>${player}: ${change}</span>`)
+          .join(" | ");
+        detailsContent.push(`<p><strong>Points Changes:</strong> ${changes}</p>`);
+      }
+      detailsContent.push(`<p><strong>Timestamp:</strong> ${matchData.timestamp ? formatTimestamp(matchData.timestamp) : "Unknown"}</p>`);
+      if (matchData.video_link) {
+        detailsContent.push(`<p><strong>Video:</strong> <a href="${matchData.video_link}" target="_blank" class="video-link">Watch Video</a></p>`);
+      } else {
+        detailsContent.push(`<p><strong>Video:</strong> Match wasn't recorded</p>`);
+      }
+      details.innerHTML = detailsContent.join("");
+      card.appendChild(details);
+      
+      // Toggle details on card click
+      card.addEventListener("click", () => {
+        details.style.display = (details.style.display === "block") ? "none" : "block";
+      });
+      
+      return card;
+    }
+    
+    async function loadMatches() {
+      const container = document.getElementById("matches-container");
+      try {
+        // Firestore hierarchy: TournamentMatches -> CurrentTournament -> Matches
+        const matchesRef = collection(doc(db, "TournamentMatches", "CurrentTournament"), "Matches");
+        const matchesQuery = query(matchesRef, orderBy("timestamp", "desc"));
+        const querySnapshot = await getDocs(matchesQuery);
+    
+        container.innerHTML = "";
+        if (querySnapshot.empty) {
+          container.innerHTML = "<p style='font-size:1.5em;'>No matches found.</p>";
+          return;
+        }
+    
+        querySnapshot.forEach((docSnap) => {
+          const matchData = docSnap.data();
+          const card = createMatchCard(matchData);
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error("Error loading matches:", error);
+        container.innerHTML = "<p style='font-size:1.5em;'>Error loading matches.</p>";
+      }
+    }
+    
+    window.addEventListener("DOMContentLoaded", loadMatches);
+  </script>
+</body>
+</html>
