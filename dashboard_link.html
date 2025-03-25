@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SFC Dashboard</title>
+  <style>
+    /* Reset some default styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #3c3c3c;
+      color: #fff;
+      display: flex;
+      height: 100vh;
+    }
+    
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 220px;
+      background-color: #2b2b2b;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .sidebar a {
+      text-decoration: none;
+      color: #fff;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    
+    .sidebar a:hover {
+      background-color: #444;
+      transform: translateX(5px);
+    }
+    
+    .sidebar a.active {
+      background-color: #FF4500;
+    }
+    
+    /* Main Content */
+    .main-content {
+      flex-grow: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+    
+    h1 {
+      margin-bottom: 20px;
+    }
+    
+    /* Overview Container for two columns */
+    .overview-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    /* Recent Matches Section */
+    .recent-matches {
+      background-color: #333;
+      padding: 15px;
+      border-radius: 10px;
+      flex: 2;
+      min-width: 300px;
+    }
+    
+    .recent-matches h2 {
+      margin-bottom: 15px;
+    }
+    
+    .match-card {
+      background-color: #4a4a4a;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
+      position: relative;
+    }
+    
+    /* Recent Points Changes Section */
+    .recent-points {
+      background-color: #333;
+      padding: 15px;
+      border-radius: 10px;
+      flex: 1;
+      min-width: 250px;
+    }
+    
+    .recent-points h2 {
+      margin-bottom: 15px;
+    }
+    
+    .points-card {
+      background-color: #4a4a4a;
+      border-radius: 15px;
+      padding: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .points-change {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar">
+    <h2>SFC Dashboard</h2>
+    <a href="dashboard_link.html" class="active" id="overview-link">Overview</a>
+    <a href="Leaderboard.html" id="leaderboard-link">Leaderboard</a>
+    <a href="matches.html" id="matches-link">Matches</a>
+    <a href="hof.html" id="hof-link">Hall Of Fame</a>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1>Overview</h1>
+    <div class="overview-container">
+      <!-- Recent Matches Column -->
+      <div class="recent-matches">
+        <h2>Recent Matches</h2>
+        <div id="recent-matches">
+          <!-- Recent match cards will be inserted here -->
+          <p>Loading recent matches...</p>
+        </div>
+      </div>
+      
+      <!-- Recent Points Changes Column -->
+      <div class="recent-points">
+        <h2>Recent Points Changes</h2>
+        <div id="recent-points-changes">
+          <!-- Points change cards will be inserted here -->
+          <p>Loading recent points changes...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs and Dashboard Script using Modular Imports -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+    import {
+      getFirestore,
+      doc,
+      collection,
+      query,
+      orderBy,
+      limit,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB55KgdLJWoFB1h-hfyEVfJYWT3aXIOKWM",
+      authDomain: "elosystem-54a9e.firebaseapp.com",
+      databaseURL: "https://elosystem-54a9e-default-rtdb.firebaseio.com",
+      projectId: "elosystem-54a9e",
+      storageBucket: "elosystem-54a9e.firebasestorage.app",
+      messagingSenderId: "737317674307",
+      appId: "1:737317674307:web:51d623e31dc01c849f63f6",
+      measurementId: "G-5EY1YC7G6W"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    // ----------------------------------------------------------------
+    // ONLY the new fetch function + display logic to avoid duplication
+    // ----------------------------------------------------------------
+    async function fetchMatchesAndPointsChanges() {
+      // Reference the doc "CurrentTournament" inside the "TournamentMatches" collection
+      const currentTournamentRef = doc(db, "TournamentMatches", "CurrentTournament");
+      // Grab the subcollection "Matches"
+      const matchesRef = collection(currentTournamentRef, "Matches");
+      
+      // Query up to 10 recent matches, sorted by timestamp desc
+      const q = query(matchesRef, orderBy("timestamp", "desc"), limit(10));
+      const snapshot = await getDocs(q);
+      
+      let matches = [];
+      let pointsChanges = [];
+      
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        
+        // Extract match details
+        let team1Players = data.team1 || [];
+        let team2Players = data.team2 || [];
+        let winner = data.winning_team;
+        let formattedWinner = winner === "Team 1"
+          ? team1Players.join(", ")
+          : team2Players.join(", ");
+        
+        matches.push({
+          team1: team1Players.join(", "),
+          team2: team2Players.join(", "),
+          winner: formattedWinner
+        });
+        
+        // Extract points changes dynamically
+        if (data.point_changes) {
+          for (let [player, change] of Object.entries(data.point_changes)) {
+            pointsChanges.push({
+              player: player,
+              change: change,
+              timestamp: data.timestamp
+            });
+          }
+        }
+      });
+      
+      // Sort point changes by most recent and limit to 5
+      pointsChanges.sort((a, b) => b.timestamp - a.timestamp);
+      pointsChanges = pointsChanges.slice(0, 5);
+      
+      displayMatches(matches);
+      displayPointsChanges(pointsChanges);
+    }
+
+    function displayMatches(matches) {
+      const matchesContainer = document.getElementById("recent-matches");
+      // Clear out the original "Loading recent matches..." text
+      matchesContainer.innerHTML = "";
+      
+      if (matches.length === 0) {
+        matchesContainer.innerHTML = "<p>No recent matches available.</p>";
+        return;
+      }
+
+      matches.forEach(match => {
+        const card = document.createElement("div");
+        card.className = "match-card";
+        // Winner name is shown in green. Remove style if not desired.
+        card.innerHTML = `
+          <p><strong>${match.team1}</strong> vs <strong>${match.team2}</strong></p>
+          <p>Winner: <span style="color: limegreen;">${match.winner}</span></p>
+        `;
+        matchesContainer.appendChild(card);
+      });
+    }
+
+    function displayPointsChanges(pointsChanges) {
+      const pointsContainer = document.getElementById("recent-points-changes");
+      // Clear out the original "Loading recent points changes..." text
+      pointsContainer.innerHTML = "";
+      
+      if (pointsChanges.length === 0) {
+        pointsContainer.innerHTML = "<p>No recent points changes available.</p>";
+        return;
+      }
+      
+      pointsChanges.forEach(change => {
+        const card = document.createElement("div");
+        card.className = "points-card";
+        let color = change.change > 0 ? "limegreen" : "red";
+        let sign = change.change > 0 ? "+" : "";
+        
+        card.innerHTML = `
+          <p><strong>${change.player}</strong>: 
+          <span style="color: ${color};">${sign}${change.change}</span></p>
+        `;
+        pointsContainer.appendChild(card);
+      });
+    }
+
+    // Call the function once the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchMatchesAndPointsChanges();
+    });
+  </script>
+</body>
+</html>
