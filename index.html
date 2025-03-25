@@ -1,46 +1,140 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My Homepage</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SFC - Shredder Fight Club</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #3c3c3c; /* Dark background for dark mode */
+      color: #FFFFFF;
+      text-align: center;
     }
-    header {
-      background: #333;
+    /* Hero Section */
+    .hero {
+      position: relative;
+      width: 100%;
+      height: 60vh; /* adjust height as needed */
+      background: url('https://codehs.com/uploads/a5987fc06c8b04a73b327e036e8738b2') no-repeat center center;
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-text {
+      font-size: 10em; /* Adjusted for better balance */
+      font-weight: bold;
+      color: #FFFFFF;
+      text-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+      z-index: 1;
+      margin: 0;
+    }
+    /* Overlay to darken image for better text readability */
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 0;
+    }
+    /* SVG Divider for a smooth transition */
+    .divider {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      line-height: 0;
+    }
+    .divider svg {
+      position: relative;
+      display: block;
+      width: calc(100% + 1.3px);
+      height: 80px;
+    }
+    .divider .shape-fill {
+      fill: #3c3c3c;
+    }
+    /* Main Content Section */
+    .content {
+      padding: 40px 20px;
+      background-color: #3c3c3c;
+    }
+    .dashboard-button {
+      display: inline-block;
+      padding: 15px 30px;
+      background-color: #FF4500; /* Vibrant button color */
       color: #fff;
-      padding: 10px 20px;
-      text-align: center;
+      text-decoration: none;
+      font-size: 1.2em;
+      border-radius: 5px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      margin-bottom: 20px;
     }
-    main {
-      margin: 20px auto;
+    .dashboard-button:hover {
+      background-color: #e03e00;
+      transform: translateY(-2px);
+    }
+    .description {
       max-width: 800px;
-      background: #fff;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin: 20px auto;
+      font-size: 1.1em;
+      line-height: 1.6;
+      color: #FFFFFF;
     }
-    footer {
-      text-align: center;
-      padding: 10px;
-      font-size: 0.9em;
-      color: #777;
+    .socials {
+      margin-top: 30px;
+    }
+    .socials a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: #FFFFFF;
+      font-size: 1.1em;
+      display: inline-flex;
+      align-items: center;
+    }
+    .socials a img {
+      width: 24px;
+      height: 24px;
+      margin-right: 8px;
+    }
+    .socials a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Welcome to My Homepage</h1>
-  </header>
-  <main>
-    <p>This is a simple homepage hosted on GitHub Pages to verify that your code is correctly displayed.</p>
-    <p>If you see this content, GitHub Pages is working as expected!</p>
-  </main>
-  <footer>
-    <p>&copy; 2025 My Website</p>
-  </footer>
+  <!-- Hero Section with Background Image and Overlaid Text -->
+  <section class="hero">
+    <h1 class="hero-text">SFC</h1>
+  </section>
+
+  <!-- SVG Divider for a smooth transition -->
+  <div class="divider">
+    <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path class="shape-fill" d="M0,256L48,229.3C96,203,192,149,288,144C384,139,480,181,576,197.3C672,213,768,203,864,197.3C960,192,1056,192,1152,202.7C1248,213,1344,235,1392,245.3L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+    </svg>
+  </div>
+  
+  <!-- Main Content Below Hero -->
+  <section class="content">
+    <a href="dashboard_link.html" class="dashboard-button">Dashboard</a>
+    <p class="description">
+      Welcome to the official SFC website! If you didn't already know SFC is a Plane Crazy shredder community focused on competitive dueling and tournaments, we all want to have fun and improve our shredders doing so. Here you can check out things like the leaderboard where you can see your rank and skill placement, or your duel history. Have fun!
+    </p>
+    <div class="socials">
+      <a href="https://discord.gg/yHfeD2r2F7" target="_blank">
+        <img src="https://pngimg.com/d/discord_PNG7.png" alt="Discord Logo">Discord
+      </a>
+      <a href="https://www.roblox.com/communities/34875403/Shredder-Fighting-Club#!/about" target="_blank">
+        <img src="https://devforum-uploads.s3.dualstack.us-east-2.amazonaws.com/uploads/original/4X/0/e/e/0eeeb19633422b1241f4306419a0f15f39d58de9.png" alt="Roblox Logo">Roblox Group
+      </a>
+    </div>
+  </section>
 </body>
 </html>
