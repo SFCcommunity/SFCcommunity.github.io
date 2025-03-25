@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Leaderboard</title>
+  <style>
+    /* Reset styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background-color: #3c3c3c;
+      color: #fff;
+      display: flex;
+      height: 100vh;
+    }
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 220px;
+      background-color: #2b2b2b;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .sidebar a {
+      text-decoration: none;
+      color: #fff;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .sidebar a:hover {
+      background-color: #444;
+      transform: translateX(5px);
+    }
+    .sidebar a.active {
+      background-color: #FF4500;
+    }
+    /* Main Content */
+    .main-content {
+      flex-grow: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2em;
+    }
+    /* Leaderboard Table Styling */
+    .leaderboard-container {
+      background-color: #333;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 1.2em;
+    }
+    .leaderboard-table th, 
+    .leaderboard-table td {
+      padding: 15px 20px;
+      text-align: left;
+      border-bottom: 2px solid #444;
+      position: relative;
+      overflow: hidden;
+    }
+    .leaderboard-table thead {
+      background-color: #444;
+    }
+    .leaderboard-table tbody tr:hover {
+      background-color: #4a4a4a;
+    }
+    /* Top three index colors */
+    .top-index-1 { color: #ffd700; } /* gold */
+    .top-index-2 { color: #c0c0c0; } /* silver */
+    .top-index-3 { color: #cd7f32; } /* bronze */
+    
+    /* Row styling based on rank */
+    /* Bronze variants get no extra theme (default) */
+    .default {
+      background: inherit;
+      color: inherit;
+    }
+    /* Silver variants */
+    .silver {
+      background: linear-gradient(45deg, #dcdcdc, #c0c0c0);
+      color: #333;
+    }
+    /* Gold variants */
+    .gold {
+      background: #e6c200;
+      color: #4d3e00;
+    }
+    /* Platinum: reflective animated gradient */
+    .platinum {
+      background: linear-gradient(45deg, #0f0c29, #dbcccc, #9e9696);
+      background-size: 400% 400%;
+      animation: gradientAnimation 15s ease infinite;
+      color: #fff;
+    }
+    /* Black Diamond: standard black background with white-outlined text */
+    .black-diamond {
+      background: black;
+      color: black;
+      -webkit-text-stroke: 1px white;
+      text-shadow: 0 0 3px white;
+    }
+    @keyframes gradientAnimation {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* Individual snowflake styling */
+    .individual-snowflake {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation-name: individualSnow;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+    @keyframes individualSnow {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(20px, 100px) rotate(360deg); opacity: 0; }
+    }
+    /* Rank image styling */
+    .rank-image {
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar">
+    <h2>SFC Dashboard</h2>
+    <a href="dashboard_link.html" id="overview-link">Overview</a>
+    <a href="Leaderboard.html" class="active" id="leaderboard-link">Leaderboard</a>
+    <a href="matches.html" id="matches-link">Matches</a>
+    <a href="hof.html" id="hof-link">Hall Of Fame</a>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1>Leaderboard</h1>
+    <div class="leaderboard-container" id="leaderboard-container">
+      <p style="font-size:1.5em;">Loading leaderboard...</p>
+      <table class="leaderboard-table" id="leaderboard-table" style="display:none;">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Player</th>
+            <th>Points/Elo</th>
+            <th>Rank</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- Rows will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs and Leaderboard Script using Modular Imports -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
+    import {
+      getFirestore,
+      doc,
+      collection,
+      query,
+      orderBy,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB55KgdLJWoFB1h-hfyEVfJYWT3aXIOKWM",
+      authDomain: "elosystem-54a9e.firebaseapp.com",
+      databaseURL: "https://elosystem-54a9e-default-rtdb.firebaseio.com",
+      projectId: "elosystem-54a9e",
+      storageBucket: "elosystem-54a9e.firebasestorage.app",
+      messagingSenderId: "737317674307",
+      appId: "1:737317674307:web:51d623e31dc01c849f63f6",
+      measurementId: "G-5EY1YC7G6W"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    // Mapping of rank to image URL and tooltip text with separate keys for variants.
+    // Normalize Silver, Gold, Platinum, and Black Diamond so any variant uses the same image.
+    const rankImages = {
+      "Bronze": { url: "https://example.com/rank_bronze.png", tooltip: "Bronze Rank" },
+      "Bronze-": { url: "https://example.com/rank_bronze_minus.png", tooltip: "Bronze Minus Rank" },
+      "Bronze+": { url: "https://example.com/rank_bronze_plus.png", tooltip: "Bronze Plus Rank" },
+      "Silver": { url: "https://example.com/rank_silver.png", tooltip: "Silver Rank" },
+      "Silver-": { url: "https://example.com/rank_silver.png", tooltip: "Silver Rank" },
+      "Silver+": { url: "https://example.com/rank_silver.png", tooltip: "Silver Rank" },
+      "Gold": { url: "https://example.com/rank_gold.png", tooltip: "Gold Rank" },
+      "Gold-": { url: "https://example.com/rank_gold.png", tooltip: "Gold Rank" },
+      "Gold+": { url: "https://example.com/rank_gold.png", tooltip: "Gold Rank" },
+      "Platinum": { url: "https://example.com/rank_platinum.png", tooltip: "Platinum Rank" },
+      "Black Diamond": { url: "https://images.squarespace-cdn.com/content/v1/6008e9a4f5d56a6a89a67b87/1611197561198-07RPYF066JE9XFST1KPY/Black+Diamond.png", tooltip: "Black Diamond Rank" },
+      "Black Diamond-": { url: "https://images.squarespace-cdn.com/content/v1/6008e9a4f5d56a6a89a67b87/1611197561198-07RPYF066JE9XFST1KPY/Black+Diamond.png", tooltip: "Black Diamond Rank" },
+      "Black Diamond+": { url: "https://images.squarespace-cdn.com/content/v1/6008e9a4f5d56a6a89a67b87/1611197561198-07RPYF066JE9XFST1KPY/Black+Diamond.png", tooltip: "Black Diamond Rank" }
+    };
+
+    async function loadLeaderboard() {
+      const container = document.getElementById("leaderboard-container");
+      const table = document.getElementById("leaderboard-table");
+      const tbody = document.getElementById("leaderboard-body");
+
+      try {
+        // Firestore hierarchy: TournamentMatches -> CurrentTournament -> Players
+        const currentTournamentRef = doc(db, "TournamentMatches", "CurrentTournament");
+        const playersRef = collection(currentTournamentRef, "Players");
+        const playersQuery = query(playersRef, orderBy("points", "desc"));
+        const querySnapshot = await getDocs(playersQuery);
+
+        if (querySnapshot.empty) {
+          container.innerHTML = "<p style='font-size:1.5em;'>No players found.</p>";
+          return;
+        }
+
+        // Hide loading text and display table
+        container.querySelector("p").style.display = "none";
+        table.style.display = "table";
+
+        let index = 1;
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const name = data.name || "Unknown Player";
+          const points = data.points || 0;
+          // Get the raw rank and normalize for Silver, Gold, Platinum, and Black Diamond
+          let rawRank = (data.rank || "Bronze").trim();
+          let normalizedRank = rawRank;
+          if (/^silver[\-\+]?$/i.test(rawRank)) {
+            normalizedRank = "Silver";
+          } else if (/^gold[\-\+]?$/i.test(rawRank)) {
+            normalizedRank = "Gold";
+          } else if (/^platinum[\-\+]?$/i.test(rawRank)) {
+            normalizedRank = "Platinum";
+          } else if (/^black diamond[\-\+]?$/i.test(rawRank)) {
+            normalizedRank = "Black Diamond";
+          }
+          // For Bronze variants, use default theme
+          let rowClass = (normalizedRank.toLowerCase() === "bronze") ? "default" : normalizedRank.toLowerCase();
+          // Remove spaces from class tokens
+          rowClass = rowClass.replace(/\s+/g, '-');
+
+          // Create table row and assign rank-specific class
+          const tr = document.createElement("tr");
+          tr.classList.add(rowClass);
+
+          // Position/Index cell with special color for top 3
+          const tdIndex = document.createElement("td");
+          tdIndex.style.fontSize = "1.5em";
+          tdIndex.textContent = index;
+          if (index === 1) {
+            tdIndex.classList.add("top-index-1");
+          } else if (index === 2) {
+            tdIndex.classList.add("top-index-2");
+          } else if (index === 3) {
+            tdIndex.classList.add("top-index-3");
+          }
+          tr.appendChild(tdIndex);
+
+          // Player Name cell
+          const tdName = document.createElement("td");
+          tdName.style.fontSize = "1.5em";
+          tdName.textContent = name;
+          tr.appendChild(tdName);
+
+          // Points/Elo cell
+          const tdPoints = document.createElement("td");
+          tdPoints.style.fontSize = "1.5em";
+          tdPoints.textContent = points;
+          tr.appendChild(tdPoints);
+
+          // Rank cell
+          const tdRank = document.createElement("td");
+          tdRank.style.fontSize = "1.5em";
+          if (normalizedRank === "Black Diamond") {
+            const imageData = rankImages[rawRank] || rankImages[normalizedRank];
+            if (imageData) {
+              const img = document.createElement("img");
+              img.src = imageData.url;
+              img.alt = rawRank;
+              img.title = imageData.tooltip;
+              img.className = "rank-image";
+              tdRank.appendChild(img);
+            } else {
+              tdRank.textContent = rawRank;
+            }
+          } else {
+            const imageData = rankImages[rawRank] || rankImages[normalizedRank];
+            if (imageData) {
+              const img = document.createElement("img");
+              img.src = imageData.url;
+              img.alt = rawRank;
+              img.title = imageData.tooltip;
+              img.className = "rank-image";
+              tdRank.appendChild(img);
+            } else {
+              tdRank.textContent = rawRank;
+            }
+          }
+          tr.appendChild(tdRank);
+          tbody.appendChild(tr);
+          index++;
+
+          // If the row is Black Diamond, add independent snowflakes to each cell, contained within that cell.
+          if (rowClass === "black-diamond") {
+            const cells = tr.querySelectorAll("td");
+            cells.forEach(cell => {
+              cell.style.overflow = "hidden"; // ensure snowflakes do not overflow
+              // Add 5 independent snowflakes per cell
+              for (let j = 0; j < 13; j++) {
+                const snow = document.createElement("div");
+                snow.className = "individual-snowflake";
+                // Randomize starting position within the cell
+                snow.style.left = Math.random() * cell.clientWidth + "px";
+                snow.style.top = Math.random() * cell.clientHeight + "px";
+                // Randomize animation delay and duration
+                snow.style.animationDelay = Math.random() * 1 + "s";
+                snow.style.animationDuration = (1 + Math.random() * 3) + "s";
+                // Apply an extra random translation for more randomness
+                snow.style.transform = `translate(${Math.random() * 30}px, ${Math.random() * 30}px)`;
+                cell.appendChild(snow);
+              }
+            });
+          }
+        });
+      } catch (error) {
+        console.error("Error loading leaderboard:", error);
+        container.innerHTML = "<p style='font-size:1.5em;'>Error loading leaderboard data.</p>";
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadLeaderboard);
+  </script>
+</body>
+</html>
