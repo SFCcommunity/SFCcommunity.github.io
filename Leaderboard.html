@@ -210,20 +210,72 @@
     // Mapping of rank to image URL and tooltip text with separate keys for variants.
     // Normalize Silver, Gold, Platinum, and Black Diamond so any variant uses the same image.
     const rankImages = {
-      "Bronze": { url: "https://example.com/rank_bronze.png", tooltip: "Bronze Rank" },
-      "Bronze-": { url: "https://example.com/rank_bronze_minus.png", tooltip: "Bronze Minus Rank" },
-      "Bronze+": { url: "https://example.com/rank_bronze_plus.png", tooltip: "Bronze Plus Rank" },
-      "Silver": { url: "https://example.com/rank_silver.png", tooltip: "Silver Rank" },
-      "Silver-": { url: "https://example.com/rank_silver.png", tooltip: "Silver Rank" },
-      "Silver+": { url: "https://example.com/rank_silver.png", tooltip: "Silver Rank" },
-      "Gold": { url: "https://example.com/rank_gold.png", tooltip: "Gold Rank" },
-      "Gold-": { url: "https://example.com/rank_gold.png", tooltip: "Gold Rank" },
-      "Gold+": { url: "https://example.com/rank_gold.png", tooltip: "Gold Rank" },
-      "Platinum": { url: "https://example.com/rank_platinum.png", tooltip: "Platinum Rank" },
-      "Black Diamond": { url: "https://images.squarespace-cdn.com/content/v1/6008e9a4f5d56a6a89a67b87/1611197561198-07RPYF066JE9XFST1KPY/Black+Diamond.png", tooltip: "Black Diamond Rank" },
-      "Black Diamond-": { url: "https://images.squarespace-cdn.com/content/v1/6008e9a4f5d56a6a89a67b87/1611197561198-07RPYF066JE9XFST1KPY/Black+Diamond.png", tooltip: "Black Diamond Rank" },
-      "Black Diamond+": { url: "https://images.squarespace-cdn.com/content/v1/6008e9a4f5d56a6a89a67b87/1611197561198-07RPYF066JE9XFST1KPY/Black+Diamond.png", tooltip: "Black Diamond Rank" }
-    };
+  "Bronze": {
+    url: "Images/Bronze+.png",
+    tooltip: "Bronze Rank"
+  },
+  "Bronze-": {
+    url: "Images/Bronze-.png",
+    tooltip: "Bronze Minus Rank"
+  },
+  "Bronze+": {
+    url: "Images/Bronze+.png",
+    tooltip: "Bronze Plus Rank"
+  },
+
+  "Silver": {
+    url: "Images/Silver+.png",
+    tooltip: "Silver Rank"
+  },
+  "Silver-": {
+    url: "Images/Silver-.png",
+    tooltip: "Silver Minus Rank"
+  },
+  "Silver+": {
+    url: "Images/Silver+.png",
+    tooltip: "Silver Plus Rank"
+  },
+
+  "Gold": {
+    url: "Images/Gold+.png",
+    tooltip: "Gold Rank"
+  },
+  "Gold-": {
+    url: "Images/Gold-.png",
+    tooltip: "Gold Minus Rank"
+  },
+  "Gold+": {
+    url: "Images/Gold+.png",
+    tooltip: "Gold Plus Rank"
+  },
+
+  "Platinum": {
+    url: "Images/Platinum+.png",
+    tooltip: "Platinum Rank"
+  },
+  "Platinum-": {
+    url: "Images/Platinum-.png",
+    tooltip: "Platinum Minus Rank"
+  },
+  "Platinum+": {
+    url: "Images/Platinum+.png",
+    tooltip: "Platinum Plus Rank"
+  },
+
+  "Black Diamond": {
+    url: "Images/BlackDiamond+.png",
+    tooltip: "Black Diamond Rank"
+  },
+  "Black Diamond-": {
+    url: "Images/BlackDiamond-.png",
+    tooltip: "Black Diamond Minus Rank"
+  },
+  "Black Diamond+": {
+    url: "Images/BlackDiamond+.png",
+    tooltip: "Black Diamond Plus Rank"
+  }
+};
+
 
     async function loadLeaderboard() {
       const container = document.getElementById("leaderboard-container");
